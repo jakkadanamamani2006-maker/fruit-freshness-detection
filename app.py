@@ -2,6 +2,8 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import os
+import gdown
 
 st.set_page_config(
     page_title="FreshSense AI",
@@ -53,13 +55,6 @@ st.markdown("""
     color:#555;
 }
 
-.card{
-    background:white;
-    padding:20px;
-    border-radius:20px;
-    box-shadow:0px 8px 20px rgba(0,0,0,0.1);
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -71,7 +66,6 @@ st.markdown("""
 <div class="fruit" style="left:40%">🍊</div>
 <div class="fruit" style="left:60%">🍎</div>
 <div class="fruit" style="left:80%">🍌</div>
-</div>
 """, unsafe_allow_html=True)
 
 # Header
@@ -90,11 +84,22 @@ AI Powered Fruit Freshness Detection
 
 st.write("")
 
-# Load model
+# ---------------- MODEL DOWNLOAD ----------------
 
-model = tf.keras.models.load_model(
-    "fruit_freshness_model.keras"
-)
+MODEL_PATH = "fruit_freshness_model.keras"
+
+if not os.path.exists(MODEL_PATH):
+    st.info("Downloading model... Please wait.")
+
+    gdown.download(
+        "https://drive.google.com/uc?id=1JHax46671U2VmEyEfqIP51B5bySHLEzb",
+        MODEL_PATH,
+        quiet=False
+    )
+
+# ---------------- LOAD MODEL ----------------
+
+model = tf.keras.models.load_model(MODEL_PATH)
 
 class_names = [
     "apple",
@@ -107,7 +112,7 @@ class_names = [
 
 uploaded_file = st.file_uploader(
     "📤 Upload Fruit Image",
-    type=["jpg","jpeg","png"]
+    type=["jpg", "jpeg", "png"]
 )
 
 if uploaded_file:
@@ -120,43 +125,43 @@ if uploaded_file:
         width=350
     )
 
-    img = image.resize((224,224))
+    img = image.resize((224, 224))
 
     img_array = np.array(img)
 
-    if len(img_array.shape)==2:
-        img_array=np.stack(
-            [img_array]*3,
+    if len(img_array.shape) == 2:
+        img_array = np.stack(
+            [img_array] * 3,
             axis=-1
         )
 
-    img_array=np.expand_dims(
+    img_array = np.expand_dims(
         img_array,
         axis=0
     )
 
-    prediction=model.predict(img_array)
+    prediction = model.predict(img_array)
 
-    predicted_class=class_names[
+    predicted_class = class_names[
         np.argmax(prediction)
     ]
 
-    confidence=np.max(prediction)*100
+    confidence = np.max(prediction) * 100
 
     if "rotten" in predicted_class:
 
-        fruit=predicted_class.replace(
+        fruit = predicted_class.replace(
             "rotten",
             ""
         )
 
-        condition="Rotten ❌"
+        condition = "Rotten ❌"
 
     else:
 
-        fruit=predicted_class
+        fruit = predicted_class
 
-        condition="Fresh ✅"
+        condition = "Fresh ✅"
 
     st.markdown("## Prediction Result")
 
