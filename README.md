@@ -62,6 +62,7 @@ numpy
 pillow
 gdown
 opencv-python
+gTTs
 
 ---
 
